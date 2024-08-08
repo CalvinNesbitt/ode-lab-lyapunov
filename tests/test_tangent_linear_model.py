@@ -6,7 +6,7 @@ from ode_lab.lyapunov.examples import l63_jacobian
 from ode_lab.lyapunov.tangent_linear_model import TLMObserver
 
 
-def test_tangent_observer():
+def test_tlm_observer():
     observables = ["x", "y", "z", "dx", "dy", "dz"]
     ic = [1, 2, 3, 0.1, 0.2, 0.3]
     number_of_obs = 500
