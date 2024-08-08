@@ -87,7 +87,7 @@ class TangentIntegrator(Integrator):
         return tlm_rhs
 
     @property
-    def model_state(self):
+    def trajectory_state(self):
         return self.state[: int(self.ndim / 2)]
 
     @property
@@ -95,7 +95,7 @@ class TangentIntegrator(Integrator):
         return self.state[int(self.ndim / 2) :]
 
 
-class TangentObserver(BaseObserver):
+class TangentObserverBase(BaseObserver):
     def __init__(
         self,
         rhs: Callable,
@@ -123,5 +123,7 @@ class TangentObserver(BaseObserver):
             log_file=log_file,
         )
 
-    def observing_function(self, tangent_integrator: TangentIntegrator) -> np.ndarray:
-        return tangent_integrator.state
+
+class TLMObserver(TangentObserverBase):
+    def observing_function(self, integrator: TangentIntegrator) -> np.ndarray:
+        return self.integrator.state
