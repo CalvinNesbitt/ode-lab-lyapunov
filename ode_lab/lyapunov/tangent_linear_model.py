@@ -2,6 +2,8 @@
 Code for integrating the tangent linear model (TLM) of a dynamical system.
 """
 
+import inspect
+from functools import wraps
 from typing import Callable
 
 import numpy as np
@@ -51,6 +53,8 @@ class TangentIntegrator(Integrator):
         parameters: dict | None = None,
         method: str = "DOP853",
     ):
+        self._ensure_same_args_kwargs(rhs, jacobian)
+
         tlm_rhs = self._get_tlm(rhs, jacobian)
         if isinstance(ic, list):
             ic = np.array(ic)
@@ -59,12 +63,25 @@ class TangentIntegrator(Integrator):
         tlm_ic = np.append(ic, tangent_ic)
         super().__init__(tlm_rhs, tlm_ic, parameters, method)
 
+    def _ensure_same_args_kwargs(self, rhs: Callable, jacobian: Callable):
+        rhs_args_kwargs = inspect.signature(rhs).parameters
+        rhs_args_kwargs = [p[1].name for p in rhs_args_kwargs.items()]
+        jacobian_args_kwargs = inspect.signature(jacobian).parameters
+        jacobian_args_kwargs = [p[1].name for p in jacobian_args_kwargs.items()]
+        try:
+            assert rhs_args_kwargs == jacobian_args_kwargs
+        except AssertionError:
+            raise ValueError(
+                "The rhs and jacobian functions must have the same args/kwargs"
+            )
+
     def _get_tlm(self, rhs: Callable, jacobian: Callable) -> Callable:
-        def tlm_rhs(state, **kwargs):
-            trajectory = state[: int(self.ndim / 2)]
+        @wraps(rhs)
+        def tlm_rhs(state, *args, **kwargs):
+            trajectory_state = state[: int(self.ndim / 2)]
             perturbation = state[int(self.ndim / 2) :]
-            trajectory_rhs = rhs(trajectory, **kwargs)
-            tangent_rhs_dt = jacobian(trajectory, **kwargs).dot(perturbation)
+            trajectory_rhs = rhs(trajectory_state, **kwargs)
+            tangent_rhs_dt = jacobian(perturbation, **kwargs).dot(perturbation)
             return np.append(trajectory_rhs, tangent_rhs_dt)
 
         return tlm_rhs
