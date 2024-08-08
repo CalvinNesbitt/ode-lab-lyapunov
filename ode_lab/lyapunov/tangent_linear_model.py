@@ -8,7 +8,7 @@ from typing import Callable
 
 import numpy as np
 from ode_lab.base.integrate import Integrator
-from ode_lab.base.observe import BaseObserver
+from ode_lab.base.observe import Observer
 
 
 class TangentIntegrator(Integrator):
@@ -95,35 +95,6 @@ class TangentIntegrator(Integrator):
         return self.state[int(self.ndim / 2) :]
 
 
-class TangentObserverBase(BaseObserver):
-    def __init__(
-        self,
-        rhs: Callable,
-        jacobian: Callable,
-        ic: np.ndarray | list,
-        tangent_ic: np.ndarray | list,
-        parameters: dict | None = None,
-        method: str = "DOP853",
-        observable_names: list["str"] | None = None,
-        log_level: str = "INFO",
-        log_file: str | None = None,
-    ):
-        if observable_names is None:
-            observable_names = [f"X_{i}" for i in range(len(ic))] + [
-                f"dX_{i}" for i in range(len(ic))
-            ]
-        tangent_integrator = TangentIntegrator(
-            rhs, jacobian, ic, tangent_ic, parameters, method
-        )
-
-        super().__init__(
-            integrator=tangent_integrator,
-            observable_names=observable_names,
-            log_level=log_level,
-            log_file=log_file,
-        )
-
-
-class TLMObserver(TangentObserverBase):
-    def observing_function(self, integrator: TangentIntegrator) -> np.ndarray:
-        return self.integrator.state
+class TangentObserver(Observer):
+    def observing_function(self, tangent_integrator):
+        return tangent_integrator.tangent_state
