@@ -57,17 +57,17 @@ jobs:
         run: |
           pip install -e .[dev]
 
-      # - name: Test with pytest and capture coverage
-      #   run: |
-      #     pytest --cov=tz --cov-report=json:coverage.json --junitxml=test.xml
+      - name: Test with pytest and capture coverage
+        run: |
+          pytest --cov=tz --cov-report=json:coverage.json --junitxml=test.xml
 
-      # - name: Publish test results
-      #   uses: EnricoMi/publish-unit-test-result-action@v2
-      #   if: always()
-      #   with:
-      #     comment_mode: off
-      #     files: |
-      #       test.xml
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          comment_mode: off
+          files: |
+            test.xml
 
       # - name: Update Coverage Badge
       #   run: |
